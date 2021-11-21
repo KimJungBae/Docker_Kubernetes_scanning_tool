@@ -155,8 +155,8 @@ class DBComposer:
             mongoDbDriver.delete_bid_info_collection()
         # Adding BIDs
         compressed_file = io.BytesIO(get_http_resource_content(
-            "https://github.com/eliasgranderubio/bidDB_downloader/raw/master/bonus_track/20180328_sf_db.json.gz")) # 해당 깃 사이트에서 bid_downloader를 가져온 것으로 전체적인 정보 업데이트는 이곳에서 이루어진다.
-        bid_items_array, bid_detail_array = get_bug_traqs_lists_from_file(compressed_file)
+            "https://github.com/eliasgranderubio/bidDB_downloader/raw/master/bonus_track/20180328_sf_db.json.gz")) # 해당 깃 사이트에서 bid_downloader를 가져온 것으로 
+        bid_items_array, bid_detail_array = get_bug_traqs_lists_from_file(compressed_file)                         # 전체적인 정보 업데이트는 이곳에서 이루어진다.
         # Insert BIDs
         for bid_items_list in bid_items_array:
             mongoDbDriver.bulk_insert_bids(bid_items_list)
