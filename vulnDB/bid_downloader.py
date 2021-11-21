@@ -38,12 +38,12 @@ def get_info_by_label(body, label):
     init_index = tmp_body.index('<td>') + len('<td>')
     tmp_body = tmp_body[init_index:]
     tmp_body = tmp_body[:tmp_body.index('</td>')]
-    return tmp_body.rstrip().lstrip()
+    return tmp_body.rstrip().lstrip() # 온전히 인자값 만 return
 
 
 # Get CVEs
 def get_linked_CVEs(body):
-    regex = r"(CVE-[0-9]{4}-[0-9]{4,5})"
+    regex = r"(CVE-[0-9]{4}-[0-9]{4,5})" # db 에서 "cve" 컬럼의 내용을 정규식으로 검색하기 위해
     cves_obj = re.search(regex, body)
     cves = []
     if cves_obj:
@@ -82,10 +82,10 @@ def prepare_output(title, bugtraq_id, clazz, linked_cves, is_local, is_remote, v
 
 # Requests the bid, parses the HTML and prints the BugTraq info
 def get_bid(bugtraq_id):
-    url = "http://www.securityfocus.com/bid/" + str(bugtraq_id)
+    url = "http://www.securityfocus.com/bid/" + str(bugtraq_id)  # 수집된 버그를 바탕으로 id 로 검색
     try:
         r = requests.get(url)
-        if r.status_code == 200:
+        if r.status_code == 200:    # request 성공 => 해당 내용을 위에서 지정한 카테고리 별로 가져옴.
             try:
                 body = r.content.decode("utf-8")
                 body = body[body.index('<div id="vulnerability">'):
@@ -107,6 +107,6 @@ def get_bid(bugtraq_id):
 
 
 # Executes the main function called get_bid in a parallel way
-def bid_downloader(first_bid, last_bid):
+def bid_downloader(first_bid, last_bid):                    # 위에서 받은 버그들을 main에서 실행시 바로 리스트들을 불러옴.
     output_list = Parallel(n_jobs=100)(delayed(get_bid)(i) for i in range(first_bid, last_bid + 1))
     return [x for x in output_list if x is not None]

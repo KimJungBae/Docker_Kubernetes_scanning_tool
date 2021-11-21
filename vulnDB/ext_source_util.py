@@ -35,7 +35,7 @@ CONFIDENTIALITY_IMPACT = {'N': 'None', 'P': 'Partial', 'C': 'Complete'}
 INTEGRITY_IMPACT = {'N': 'None', 'P': 'Partial', 'C': 'Complete'}
 AVAILABILITY_IMPACT = {'N': 'None', 'P': 'Partial', 'C': 'Complete'}
 
-FEATURES_LIST = [ACCESS_VECTOR, ACCESS_COMPLEXITY, AUTHENTICATION, CONFIDENTIALITY_IMPACT, INTEGRITY_IMPACT,
+FEATURES_LIST = [ACCESS_VECTOR, ACCESS_COMPLEXITY, AUTHENTICATION, CONFIDENTIALITY_IMPACT, INTEGRITY_IMPACT,           # 결과 분석 기준 리스트
                  AVAILABILITY_IMPACT]
 
 
@@ -50,7 +50,7 @@ def extract_vector(initial_vector):
     new_vector = initial_vector[1:-1].split('/')
     final_vector = []
     for i in range(len(new_vector)):
-        final_vector.append(FEATURES_LIST[i][new_vector[i][-1]])
+        final_vector.append(FEATURES_LIST[i][new_vector[i][-1]])    # 해당 cve 잠재적 영향 => 심각도?
     return new_vector, final_vector
 
 
@@ -58,11 +58,11 @@ def extract_vector(initial_vector):
 def get_cve_list_from_file(compressed_content, year):
     cve_set = set()
     cve_info_list = []
-    json_file_content = zlib.decompress(compressed_content, 16 + zlib.MAX_WBITS)
-    for cve in json.loads(json_file_content)['CVE_Items']:
+    json_file_content = zlib.decompress(compressed_content, 16 + zlib.MAX_WBITS) #  압축 해제
+    for cve in json.loads(json_file_content)['CVE_Items']: # 아이템 하나 당 무조건 CVE 하나
         cve_id = cve['cve']['CVE_data_meta']['ID']
         for node in cve['configurations']['nodes']:
-            def get_cpe_match(node, cve_id, year):
+            def get_cpe_match(node, cve_id, year): # 해당 cve 구성 요소
                 output_set = set()
                 if 'children' in node:
                     for child in node['children']:
@@ -85,7 +85,7 @@ def get_cve_list_from_file(compressed_content, year):
             pub_date = datetime.datetime(int(aux[0]), int(aux[1]), int(aux[2]))
             aux = cve['lastModifiedDate'].split('T')[0].split('-')
             mod_date = datetime.datetime(int(aux[0]), int(aux[1]), int(aux[2]))
-            cvss_base = float(cve['impact']['baseMetricV2']['cvssV2']['baseScore'])
+            cvss_base = float(cve['impact']['baseMetricV2']['cvssV2']['baseScore']) # cvss => 취약점 평가 점수
             cvss_impact = float(cve['impact']['baseMetricV2']['impactScore'])
             cvss_exploit = float(cve['impact']['baseMetricV2']['exploitabilityScore'])
             vector = cve['impact']['baseMetricV2']['cvssV2']['vectorString']
@@ -124,6 +124,11 @@ def get_cve_list_from_file(compressed_content, year):
             pass
 
     return list(cve_set), cve_info_list
+
+'''
+고민 해야 할 부분 => kubernetes 관련 위(,아래) cve list 방식과 같은 것은 상관없지만, 특정 형식이 없는 취약점은 빼야 하나?
+grype와 같은 다른 스캐너에 있는 db내용 중 포함이 안된게 있는지.. 있다면 업데이트 할 수 있을가?
+'''
 
 
 # Gets Exploit_db list from csv file
@@ -180,6 +185,8 @@ def get_exploit_db_list_from_csv(csv_content):
     # Return
     return list(items), exploits_details
 
+
+# 아래 소스 들은 해당 디렉에 있는 bid~, db~ 소스 내용을 단순히 압축 해제,  실행, 다른 리스팅화 시키는 것
 
 # Gets BugTraq lists from gz file
 def get_bug_traqs_lists_from_file(compressed_file):
