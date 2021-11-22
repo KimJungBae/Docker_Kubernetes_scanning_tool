@@ -25,73 +25,11 @@ def execute_dagda_cmd(cmd, args):
                          debug_logging=args.is_debug_logging_required())
         ds.run()
 
-    # Executes agent sub-command
-    elif cmd == 'agent':
-        from remote.agent import Agent
-        agent = Agent(dagda_server_url='http://' + args.get_dagda_server() + '/v1')
-        agent.run_static_analysis(image_name=args.get_docker_image_name(),
-                                  container_id=args.get_container_id())
-
     # CLI commands
     else:
         dagda_base_url = _get_dagda_base_url()
-        # -- Executes vuln sub-command
-        if cmd == 'vuln':
-            if args.is_initialization_required():
-                # Init db
-                r = requests.post(dagda_base_url + '/vuln/init')
-            elif args.is_init_status_requested():
-                # Retrieves the init status
-                r = requests.get(dagda_base_url + '/vuln/init-status')
-            else:
-                if args.get_cve():
-                    # Gets products by CVE
-                    r = requests.get(dagda_base_url + '/vuln/cve/' + args.get_cve())
-                elif args.get_cve_info():
-                    # Gets CVE details
-                    r = requests.get(dagda_base_url + '/vuln/cve/' + args.get_cve_info() + '/details')
-                elif args.get_bid():
-                    # Gets products by BID
-                    r = requests.get(dagda_base_url + '/vuln/bid/' + str(args.get_bid()))
-                elif args.get_bid_info():
-                    # Gets BID details
-                    r = requests.get(dagda_base_url + '/vuln/bid/' + str(args.get_bid_info()) + '/details')
-                elif args.get_exploit_db_id():
-                    # Gets products by Exploit DB Id
-                    r = requests.get(dagda_base_url + '/vuln/exploit/' + str(args.get_exploit_db_id()))
-                elif args.get_exploit_db_info_id():
-                    # Gets Exploit details
-                    r = requests.get(dagda_base_url + '/vuln/exploit/' + str(args.get_exploit_db_info_id()) +
-                                     '/details')
-                elif args.get_rhsa():
-                    # Gets products by RHSA
-                    r = requests.get(dagda_base_url + '/vuln/rhsa/' + args.get_rhsa())
-                elif args.get_rhsa_info():
-                    # Gets RHSA details
-                    r = requests.get(dagda_base_url + '/vuln/rhsa/' + args.get_rhsa_info() + '/details')
-                elif args.get_rhba():
-                    # Gets products by RHBA
-                    r = requests.get(dagda_base_url + '/vuln/rhba/' + args.get_rhba())
-                elif args.get_rhba_info():
-                    # Gets RHBA details
-                    r = requests.get(dagda_base_url + '/vuln/rhba/' + args.get_rhba_info() + '/details')
-                else:
-                    # Gets CVEs, BIDs, RHBAs, RHSAs and Exploit_DB Ids by product and version
-                    if not args.get_product_version():
-                        r = requests.get(dagda_base_url + '/vuln/products/' + args.get_product())
-                    else:
-                        r = requests.get(dagda_base_url + '/vuln/products/' + args.get_product() + '/' +
-                                         args.get_product_version())
-
-        # Executes check sub-command
-        elif cmd == 'check':
-            if args.get_docker_image_name():
-                r = requests.post(dagda_base_url + '/check/images/' + args.get_docker_image_name())
-            else:
-                r = requests.post(dagda_base_url + '/check/containers/' + args.get_container_id())
-
         # Executes history sub-command
-        elif cmd == 'history':
+        if cmd == 'history':
             # Gets the global history
             if not args.get_docker_image_name():
                 r = requests.get(dagda_base_url + '/history')
@@ -116,31 +54,6 @@ def execute_dagda_cmd(cmd, args):
                     if args.get_report_id() is not None:
                         query_params = '?id=' + args.get_report_id()
                     r = requests.get(dagda_base_url + '/history/' + args.get_docker_image_name() + query_params)
-
-        # Executes monitor sub-command
-        elif cmd == 'monitor':
-            if args.is_start():
-                r = requests.post(dagda_base_url + '/monitor/containers/' + args.get_container_id() + '/start')
-            elif args.is_stop():
-                r = requests.post(dagda_base_url + '/monitor/containers/' + args.get_container_id() + '/stop')
-
-        # Executes docker sub-command
-        elif cmd == 'docker':
-            query_params = ''
-            if args.get_command() == 'events':
-                if args.get_event_action() or args.get_event_from() or args.get_event_type():
-                    query_params = '?'
-                    if args.get_event_action():
-                        query_params += 'event_action=' + args.get_event_action()
-                    if args.get_event_from():
-                        if query_params != '?':
-                            query_params += '&'
-                        query_params += 'event_from=' + args.get_event_from()
-                    if args.get_event_type():
-                        if query_params != '?':
-                            query_params += '&'
-                        query_params += 'event_type=' + args.get_event_type()
-            r = requests.get(dagda_base_url + '/docker/' + args.get_command() + query_params)
 
     # Return
     return r
