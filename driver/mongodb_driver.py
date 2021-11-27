@@ -56,8 +56,8 @@ class MongoDbDriver:
             data['year'] = int(splitted_product[4])
             products.append(data)
         # Bulk insert
-        self.db.cve.create_index([('product', pymongo.DESCENDING)])
-        self.db.cve.insert_many(products)
+        self.db.cve.create_index([('product', pymongo.DESCENDING)]) # 내림차순 저장
+        self.db.cve.insert_many(products)                           # 위에서 producst에 넣은 data 리스트 들 한번에 insert
 
     # Bulk insert the cve info
     def bulk_insert_cves_info(self, cves):
@@ -168,6 +168,27 @@ class MongoDbDriver:
     def insert_init_db_process_status(self, status):
         self.db.init_db_process_status.insert(status)
 
+    """
+    위에 코드 참고 해서 작성 해야 하는 부분
+    """
+    # kubernetes pod 관련 내용 저장 할 곳
+    def insert_kubernetes_pod(self, pods):
+        pods_list = []
+        for pod in pods:
+            data = {}
+            data['pod_ip'] = pod['pod_ip']
+            data['pod_name'] = pod['pod_name']
+            data['namespace'] = pod['namespace']
+            data['time'] = dateutil.parser.parse(pod['time']).timestamp()
+            #data['node_name'] = pod['nod_name']
+            #data['node_ip'] = pod['node_ip']
+            pods_list.append(data)
+        # Bulk insert
+        if self.db.kube_pods.count() == 0:
+            self.db.kube_pods.create_index([('pod_ip', pymongo.DESCENDING)])
+        self.db.kube_pods.insert_many(pods_list)
+
+
     # -- Removing methods
 
     # Removes only the cves for updating and return the first year for inserting again
@@ -224,6 +245,10 @@ class MongoDbDriver:
     def delete_falco_events_collection(self):
         self.db.falco_events.drop()
 
+     # Removes pods_list collection
+    def delete_pods_list_collection(self):
+        self.db.kube_pods.drop()
+    
     # -- Querying methods
 
     # Gets the max bid inserted
@@ -585,7 +610,7 @@ class MongoDbDriver:
         # Return
         return output
 
-    # Check if product vulnerability was tagged as false positive
+    # Check if product vulnerability was tagged as false positive => 아래 update까지 포함 실제 analysis 디렉과 연관 되는 코드
     def is_fp(self, image_name, product, version=None):
         cursor = self.db.image_history.find({'image_name': image_name}).sort("timestamp", pymongo.DESCENDING)
         for scan in cursor:
@@ -597,7 +622,7 @@ class MongoDbDriver:
                             if 'is_false_positive' in p and p['is_false_positive']:
                                 return True
 
-                # Dependencies
+                # Dependencies      # 언어 관련 check
                 if 'prog_lang_dependencies' in scan['static_analysis'] and \
                         scan['static_analysis']['prog_lang_dependencies']['dependencies_details'] is not None:
                     for language in ['java', 'python', 'nodejs', 'js', 'ruby', 'php']:
