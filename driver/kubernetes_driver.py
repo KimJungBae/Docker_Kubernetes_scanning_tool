@@ -45,9 +45,19 @@ class KubernetesDriver:
             ret = api_client.list_namespaced_pod("default", watch=False)
 
             print("Listing pods with their IPs:")
+            pods = []
 
             for i in ret.items:
-	            print(f"{i.status.pod_ip}\t{i.metadata.name}") # i.metadata.namespace == namespace 가져 와라
+                t_pod = {}
+                t_pod['pod_ip'] = i.status.pod_ip
+                t_pod['pod_name'] = i.metadata.name
+                t_pod['pod_namespace'] = i.metadata.namespace
+                # time이... 필요한가?
+	            #print(f"{i.status.pod_ip}\t{i.metadata.name}") # i.metadata.namespace == namespace 가져 와라
+                pods.append(t_pod)
+
+                if pods.count == 0:
+                    print("데이터가 없거나, 구문에 오류가 있는 것 같습니다.")
 
             # kubectl exec [pod name] -- sh
             my_command = ['sh']
@@ -61,7 +71,8 @@ class KubernetesDriver:
                  stdout=True,
                  tty=False)
 
-            print(response)
+            #print(response)
+            return response
 
         except ApiException as e:               
             # 연결 오류
@@ -72,10 +83,13 @@ class KubernetesDriver:
         # secret 리스트 검색 및 해당 네임 출력
         config.load_kube_config()
         v1 = client.CoreV1Api()
-
+        
         k = v1.list_namespaced_secret(str(os.environ.get("[MY_POD_NAMESPACE]")))  # list_secret_for_all_namespaces => 전체 시크릿 리스트 출력 
-        for i in k.items:
-            print(i.metadata.name)
+        searched_list = []
+
+        for i in k.items:      
+            #print(i.metadata.name)
+            searched_list.append(i.metadata.name)
 
     """
     [kube_config 리스트 출력 예제, return에 넣은 fuction이 필요하다고 하는데, 이해가 안됨.]
@@ -105,7 +119,8 @@ class KubernetesDriver:
             api_instance = client.CoreV1Api()
             api_response = api_instance.read_namespaced_pod_log(name=pod_name, namespace='default')         
             # read_namespaced_pod_log 대신 read_namespaced_pod 으로 만 고치면 "kubectl describe pods [pod_name]"
-            print(api_response)
+            #print(api_response)
+            return api_response
         except ApiException as e:
             print('Found exception in reading the logs')
 
