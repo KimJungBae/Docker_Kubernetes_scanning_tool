@@ -63,20 +63,8 @@ class DagdaGlobalParser(argparse.ArgumentParser):
 dagda_global_parser_text = '''usage: dagda.py [--version] [--help] <command> [args]
 
 Dagda Commands:
-  agent                 run a remote agent for performing the analysis of known 
-                        vulnerabilities, trojans, viruses, malware & other 
-                        malicious threats in docker images/containers
-  check                 perform the analysis of known vulnerabilities, trojans, 
-                        viruses, malware & other malicious threats in docker 
-                        images/containers
-  docker                list all docker images/containers and all docker daemon
-                        events
   history               retrieve the analysis history for the docker images
-  monitor               perform the monitoring of anomalous activities in
-                        running docker containers
   start                 start the Dagda server
-  vuln                  perform operations over your personal CVE, BID, RHBA, 
-                        RHSA & ExploitDB database
 
 Optional Arguments:
   -h, --help            show this help message and exit
