@@ -67,33 +67,6 @@ class DagdaServer:
             except KeyboardInterrupt:
                 # Pressed CTRL+C to quit, so nothing to do
                 pass
-        else:
-            docker_events_monitor_pid = os.fork()
-            if docker_events_monitor_pid == 0:
-                try:
-                    docker_daemon_events_monitor = DockerDaemonEventsMonitor(InternalServer.get_docker_driver(),
-                                                                             InternalServer.get_mongodb_driver())
-                    docker_daemon_events_monitor.run()
-                except KeyboardInterrupt:
-                    # Pressed CTRL+C to quit, so nothing to do
-                    pass
-            else:
-                sysdig_falco_monitor_pid = os.fork()
-                if sysdig_falco_monitor_pid == 0:
-                    try:
-                        self.sysdig_falco_monitor.pre_check()
-                        self.sysdig_falco_monitor.run()
-                    except DagdaError as e:
-                        DagdaLogger.get_logger().error(e.get_message())
-                        DagdaLogger.get_logger().warning('Runtime behaviour monitor disabled.')
-                    except KeyboardInterrupt:
-                        # Pressed CTRL+C to quit
-                        if not InternalServer.is_external_falco():
-                            InternalServer.get_docker_driver().docker_stop(self.sysdig_falco_monitor.get_running_container_id())
-                            InternalServer.get_docker_driver().docker_remove_container(
-                                self.sysdig_falco_monitor.get_running_container_id())
-                else:
-                    serve(DagdaServer.app, host=self.dagda_server_host, port=self.dagda_server_port, ident=None)
 
     # -- Post process
 
