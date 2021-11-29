@@ -58,6 +58,9 @@ class KubernetesDriver:
 
                 if pods.count == 0:
                     print("데이터가 없거나, 구문에 오류가 있는 것 같습니다.")
+                    break
+            
+            return pods
 
             # kubectl exec [pod name] -- sh
             my_command = ['sh']
